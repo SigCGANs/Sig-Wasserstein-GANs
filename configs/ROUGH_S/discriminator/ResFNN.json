@@ -1,0 +1,4 @@
+{
+  "discriminator_type": "ResFNN",
+  "hidden_dims": [20,20]
+}

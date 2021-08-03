@@ -1,0 +1,6 @@
+{
+  "generator_type": "SigNSDE",
+  "hidden_dim": 10,
+  "n_layers": 1,
+  "sig_depth": 3
+}

@@ -1,0 +1,9 @@
+{
+  "generator_type": "LogSigRNN",
+  "hidden_dim": 64,
+  "n_layers": 2,
+  "augmentations": ["Basepoint", "AddTime"],
+  "depth": 3,
+  "increment": false,
+  "scale_output": 1.0
+}

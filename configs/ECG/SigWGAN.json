@@ -1,0 +1,11 @@
+{
+  "batch_size": 2000,
+  "n_gradient_steps": 2024,
+  "depth": 4,
+  "lr": 3e-4,
+    "augmentations": [
+    {"name":  "Basepoint"},
+    {"name":  "Scale", "scale": 0.2},
+    {"name":  "LeadLag", "with_time":  true}
+    ]
+}
