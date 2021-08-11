@@ -1,0 +1,6 @@
+{
+  "generator_type": "NSDE",
+  "input_dim":3,
+  "hidden_dim": 64,
+  "n_layers": 1
+}

@@ -1,9 +1,11 @@
 {
+  "input_dim":4,
   "generator_type": "LogSigRNN",
   "hidden_dim": 64,
   "n_layers": 2,
-  "augmentations": ["Basepoint", "AddTime"],
-  "depth": 3,
-  "increment": false,
-  "scale_output": 1.0
+   "augmentations": [
+    {"name":  "Scale", "scale": 1},
+    {"name":  "AddTime"}
+  ],
+  "depth": 5
 }

@@ -1,0 +1,7 @@
+{
+  "generator_type": "logsigrnn",
+  "input_dim":3,
+  "hidden_dim": 64,
+  "n_layers": 1,
+  "depth": 4
+}
