@@ -71,9 +71,8 @@ def main(
     x_real = get_dataset(dataset, data_config, n_lags=n_lags)
     x_real = x_real.to(device)
     set_seed(seed)
-    #x_real_rolled = rolling_window(x_real, n_lags, )
-    x_real_rolled = x_real.clone()#torch.log(x_real) 
-    x_real_rolled = torch.log(x_real_rolled)
+    x_real_rolled = x_real.clone()
+    x_real_rolled = torch.log(x_real_rolled) # we learn the log-price and the log-vol
     x_real_train, x_real_test = train_test_split(x_real_rolled, train_test_ratio=0.8)
     x_real_dim: int = x_real.shape[2]
 
@@ -83,8 +82,7 @@ def main(
 
     # Get generator
     set_seed(seed)
-    #generator_config.update(input_dim=x_real_dim, output_dim=x_real_dim)
-    generator_config.update(input_dim=5, output_dim=x_real_dim)
+    generator_config.update(output_dim=x_real_dim)
     G = get_generator(**generator_config).to(device)
 
     # Get GAN

@@ -1,6 +1,0 @@
-{
-  "generator_type": "NSDE",
-  "hidden_dim": 50,
-  "n_layers": 2,
-  "init_fixed": true
-}

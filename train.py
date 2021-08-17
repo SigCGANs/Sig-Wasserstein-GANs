@@ -73,7 +73,7 @@ def main(
 
     # Get generator
     set_seed(seed)
-    generator_config.update(input_dim=x_real_dim, output_dim=x_real_dim)
+    generator_config.update(output_dim=x_real_dim)
     G = get_generator(**generator_config).to(device)
 
     # Get GAN
