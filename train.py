@@ -5,6 +5,7 @@ import os
 
 from os import path as pt
 from typing import Optional
+import argparse
 
 from lib.augmentations import parse_augmentations
 from lib.networks import get_generator, get_discriminator
@@ -30,7 +31,10 @@ def plot_test_metrics(test_metrics, losses_history, mode):
     for i, test_metric in enumerate(test_metrics):
         name = test_metric.name
         loss = losses_history[name + '_' + mode]
-        loss = np.concatenate(loss, 1).T
+        try:
+            loss = np.concatenate(loss, 1).T
+        except:
+            loss = np.array(loss)
         axes[i].plot(loss, label=name)
         axes[i].grid()
         axes[i].legend()
@@ -284,5 +288,15 @@ def benchmark_sigwgan(
 
 
 if __name__ == '__main__':
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--device', type=int, default=0)
+    
+    args = parser.parse_args()
+    if torch.cuda.is_available():
+        device = 'cuda:{}'.format(args.device)
+    else:
+        device = 'cpu'
     # Test run
-    #benchmark_wgan(datasets=('ECG',), generators=('NSDE',), n_seeds=1, )
+    benchmark_sigwgan(datasets=('GBM',), generators=('LogSigRNN', 'LSTM'), n_seeds=10, device=device)
+    benchmark_wgan(datasets=('GBM',), generators=('LogSigRNN', 'LSTM'), n_seeds=10, device=device)
