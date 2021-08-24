@@ -1,6 +1,6 @@
 {
   "batch_size": 1024,
-  "n_gradient_steps": 25,
+  "n_gradient_steps": 2500,
   "depth": 4,
   "lr": 1e-3,
   "augmentations": [
