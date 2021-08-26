@@ -8,7 +8,7 @@ Paper Link:
 
 ## Requirements
 
-To setup the conda enviroment:
+To setup the conda environment:
 
 ```
 conda env create -f requirements.yml
