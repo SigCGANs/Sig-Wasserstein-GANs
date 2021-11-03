@@ -1,4 +1,4 @@
 {
-  "assets": [".SPX"],
-  "n_lags": 16
+  "assets": [".SPX",".DJI"],
+  "n_lags": 10
 }

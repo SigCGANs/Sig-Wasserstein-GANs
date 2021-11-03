@@ -1,11 +1,14 @@
 {
-  "batch_size": 2000,
-  "n_gradient_steps": 2024,
+  "batch_size": 512,
+  "n_gradient_steps": 15,
   "depth": 4,
-  "lr": 3e-3,
-    "augmentations": [
-    {"name":  "Basepoint"},
-    {"name":  "Scale", "scale": 0.5},
-    {"name":  "AddTime"}
-  ]
+  "lr": 1e-3,
+  "augmentations": [
+    {"name":  "Scale", "scale":  5,"dim":0},
+    {"name":  "Scale", "scale":  5,"dim":1},
+    {"name":  "CumSum"},
+    {"name": "LeadLag","with_time":true}
+  ],
+  "mask_rate":0.0,
+  "normalise_sig":true
 }

@@ -1,7 +1,6 @@
 {
+  "input_dim":4,
   "generator_type": "LSTM",
-  "hidden_dim": 64,
-  "n_layers": 2,
-  "increment": true,
-  "scale_output": 0.5
+  "hidden_dim": 32,
+  "n_layers": 1
 }
