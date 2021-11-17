@@ -3,5 +3,5 @@
   "hidden_dim": 64,
   "n_layers": 1,
   "init_fixed": true,
-  "input_dim": 4
+  "input_dim": 1
 }

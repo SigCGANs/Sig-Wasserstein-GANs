@@ -5,6 +5,7 @@ import os
 
 from os import path as pt
 from typing import Optional
+import argparse
 
 from lib.augmentations import parse_augmentations
 from lib.networks import get_generator, get_discriminator
@@ -30,7 +31,10 @@ def plot_test_metrics(test_metrics, losses_history, mode):
     for i, test_metric in enumerate(test_metrics):
         name = test_metric.name
         loss = losses_history[name + '_' + mode]
-        loss = np.concatenate(loss, 1).T
+        try:
+            loss = np.concatenate(loss, 1).T
+        except:
+            loss = np.array(loss)
         axes[i].plot(loss, label=name)
         axes[i].grid()
         axes[i].legend()
@@ -62,7 +66,9 @@ def main(
     x_real = get_dataset(dataset, data_config, n_lags=n_lags)
     x_real = x_real.to(device)
     set_seed(seed)
-    #x_real_rolled = rolling_window(x_real, n_lags, )
+    #if dataset=='STOCKS':
+     # x_real_rolled = rolling_window(x_real, n_lags, )
+    #else:
     x_real_rolled = x_real
     x_real_train, x_real_test = train_test_split(x_real_rolled, train_test_ratio=0.8)
     x_real_dim: int = x_real.shape[2]
@@ -73,7 +79,7 @@ def main(
 
     # Get generator
     set_seed(seed)
-    generator_config.update(input_dim=x_real_dim, output_dim=x_real_dim)
+    generator_config.update(output_dim=x_real_dim)
     G = get_generator(**generator_config).to(device)
 
     # Get GAN
@@ -102,7 +108,7 @@ def main(
     trainer.fit(device=device)
 
     # Store relevant training results
-    save_obj(to_numpy(x_real), pt.join(experiment_dir, 'x_real.pkl'))
+    save_obj(to_numpy(x_real_rolled), pt.join(experiment_dir, 'x_real.pkl'))
     save_obj(trainer.losses_history, pt.join(experiment_dir, 'losses_history.pkl'))  # dev of losses / metrics
     save_obj(trainer.G.state_dict(), pt.join(experiment_dir, 'generator_state_dict.pt'))
     save_obj(generator_config, pt.join(experiment_dir, 'generator_config.pkl'))
@@ -183,7 +189,8 @@ def get_wgan_experiment_dir(dataset, discriminator, generator, gan, seed):
         dataset=dataset, gan=gan, generator=generator, discriminator=discriminator, seed=seed)
 
 
-list_of_datasets = ('GBM', 'STOCKS', 'ECG')
+list_of_datasets = ('1dimGBM','2dimGBM','3dimGBM','4dimGBM','5dimGBM' ,'STOCKS', 'ECG')
+
 
 
 def benchmark_wgan(
@@ -284,5 +291,18 @@ def benchmark_sigwgan(
 
 
 if __name__ == '__main__':
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--device', type=int, default=0)
+    
+    args = parser.parse_args()
+    if torch.cuda.is_available():
+        device = 'cuda:{}'.format(args.device)
+    else:
+        device = 'cpu'
+    benchmark_sigwgan(datasets=('STOCKS',), generators=('LogSigRNN',), n_seeds=1, device=device)
     # Test run
-    #benchmark_wgan(datasets=('ECG',), generators=('NSDE',), n_seeds=1, )
+    #for dim in range(1,6):
+      #dataset=str(dim)+'dimGBM'
+      #benchmark_sigwgan(datasets=(dataset,), generators=('LogSigRNN', 'LSTM'), n_seeds=1, device=device)
+      #benchmark_wgan(datasets=(dataset,), generators=('LogSigRNN', 'LSTM'), n_seeds=1, device=device)

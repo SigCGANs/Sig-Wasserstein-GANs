@@ -267,9 +267,11 @@ class HistoLoss(Loss):
                 density = counter.mean(0) / self.deltas[i][t].to(x_fake.device)
                 abs_metric = torch.abs(
                     density - self.densities[i][t].to(x_fake.device))
-                loss.append(torch.mean(abs_metric, 0))
-        loss_componentwise = torch.stack(loss)
-        return loss_componentwise
+                tmp_loss.append(torch.mean(abs_metric, 0))
+            tmp_loss=torch.stack(tmp_loss)  
+            loss.append(torch.mean(tmp_loss))
+        loss=torch.stack(loss)      
+        return loss
 
 
 
@@ -312,7 +314,7 @@ test_metrics = {
     'cross_correl_rtn': partial(CrossCorrelLoss, name='cross_correl_rtn', transform=diff),
     'covariance': partial(CovLoss, name='covariance', transform = torch.exp),
     'covariance_rtn': partial(CovLoss, name='covariance_rtn', transform=diff),
-    'sig_w1': partial(SigW1Loss, name='sig_w1', augmentations = [], normalise=False, mask_rate=0.01, depth=4)
+    'sig_w1': partial(SigW1Loss, name='sig_w1', augmentations = [], normalise=False, depth=4)
 }
 
 

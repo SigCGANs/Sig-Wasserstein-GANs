@@ -125,8 +125,9 @@ def get_stocks_dataset(
     vols[vols <= 1e-6] = 1e-6
     vols = np.log(vols)
 
-    x = np.concatenate([logrtns, vols[1:]], axis=1)
+    x = np.concatenate([logrtns,], axis=1)
     x = torch.from_numpy(x).float().unsqueeze(0)
+
     return x
 
 
@@ -215,15 +216,20 @@ def get_dataset(dataset: str, data_config: dict, n_lags: int, datadir=DATA_DIR):
     x_real: torch.Tensor, dataset
 
     """
-    if dataset == 'GBM':
-
-        def get_gbm(size, n_lags, d=1, drift=0., scale=0.1, h=1):
+    if  'GBM' in dataset:
+        dim=int(dataset[0])
+        def get_gbm(size, n_lags, d=dim, drift=0.1, scale=0.2,rho=0.5):
             x_real = torch.ones(size, n_lags, d)
-            x_real[:,1:,:] = torch.exp((drift-scale**2/2)*h + (scale*np.sqrt(h)*torch.randn(size,n_lags-1,d)))
+            h=1/(n_lags-1)
+            MU=torch.zeros(d)
+            COV=torch.eye(d)
+            COV[COV==0]=rho
+            W = np.random.multivariate_normal(MU, COV, size=(size, n_lags-1))
+            W=torch.from_numpy(W)
+            x_real[:,1:,:] = torch.exp((drift-scale**2/2)*h + (scale*np.sqrt(h)*W)) # uncorrelated brownian motion
             x_real = x_real.cumprod(1)
             return x_real
-
-        x_real = get_gbm(n_lags=n_lags+1, **data_config)
+        x_real = torch.log(get_gbm(n_lags=n_lags, **data_config))
     elif dataset == 'ROUGH' or dataset == 'ROUGH_S':
         path_rough = pt.join(DATA_DIR, 'rBergomi_{}steps.pth.tar'.format(n_lags))
         if pt.exists(path_rough):
@@ -241,6 +247,8 @@ def get_dataset(dataset: str, data_config: dict, n_lags: int, datadir=DATA_DIR):
             print('Downloading Oxford MAN AHL realised library.')
             download_man_ahl_dataset(datadir)
         x_real = get_stocks_dataset(datadir=datadir, **data_config)
+        x_real = x_real.float()
+        x_real= rolling_window(x_real, n_lags, )
     elif dataset == 'ECG':
         if not pt.exists(
                 pt.join(DATA_DIR, 'mit-bih-arrhythmia-database-1.0.0')

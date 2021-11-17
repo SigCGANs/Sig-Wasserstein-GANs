@@ -1,11 +1,10 @@
 {
-  "input_dim":4,
   "generator_type": "LogSigRNN",
   "hidden_dim": 64,
+  "input_dim": 4,
   "n_layers": 2,
-   "augmentations": [
-    {"name":  "Scale", "scale": 1},
-    {"name":  "AddTime"}
-  ],
-  "depth": 5
+  "augmentations": [{"name": "Scale", "scale":  1},{"name":  "AddTime"}],
+  "depth": 4,
+  "init_fixed": false,
+  "len_interval_u":200
 }

@@ -23,7 +23,6 @@ class GeneratorBase(nn.Module):
         """ Implement here generation scheme. """
         #...
         pass
-
     def forward(self, batch_size: int, n_lags: int, device: str):
         x = self.forward_(batch_size, n_lags, device)
         x = self.pipeline.inverse_transform(x)
@@ -108,11 +107,8 @@ def compute_multilevel_logsignature(brownian_path: torch.Tensor, time_brownian: 
     return multi_level_log_sig, u_logsigrnn
 
 
-
-
-
 class LogSigRNNGenerator(GeneratorBase):
-    def __init__(self, input_dim, output_dim, n_lags, augmentations, depth, hidden_dim, n_layers, len_noise=1000, len_interval_u=50, init_fixed: bool = True):
+    def __init__(self, input_dim, output_dim, n_lags, augmentations, depth, hidden_dim, n_layers, len_noise=1000, len_interval_u=50, init_fixed: bool = True,init_scale: float=1):
         
         
         super(LogSigRNNGenerator, self).__init__(input_dim, output_dim)
@@ -127,7 +123,7 @@ class LogSigRNNGenerator(GeneratorBase):
         self.hidden_dim = hidden_dim
         self.len_noise = len_noise
         self.time_brownian = torch.linspace(0,1,self.len_noise)  # len_noise is high enough so that we can consider this as a continuous brownian motion
-        self.time_u = self.time_brownian[::len_interval_u]
+        self.time_u = self.time_brownian[::len_interval_u]#logsignature for aux point #
         # self.time_t = torch.linspace(0,1,n_lags)
         
         # definition of LSTM + linear at the end
@@ -138,15 +134,16 @@ class LogSigRNNGenerator(GeneratorBase):
                       nn.Tanh()
                     )
         self.linear = nn.Linear(hidden_dim, output_dim, bias=False)
-
-        self.rnn.apply(init_weights)
-        self.linear.apply(init_weights)
+        init_weights_=lambda x:init_weights(x,0.2)
+        self.rnn.apply(init_weights_)
+        self.linear.apply(init_weights_)
         
         # neural network to initialise h0 from the LSTM
         self.initial_nn = nn.Sequential(ResFNN(input_dim, hidden_dim, [hidden_dim, hidden_dim]), nn.Tanh()) 
-        self.initial_nn.apply(init_weights)
+        self.initial_nn.apply(init_weights_)
         self.init_fixed = init_fixed
-
+        print('use another one ')
+        
     def forward(self, batch_size: int, n_lags: int, device: str,):
         time_t = torch.linspace(0,1,n_lags).to(device)
         z = torch.randn(batch_size, self.len_noise, self.input_dim, device=device)
@@ -170,10 +167,62 @@ class LogSigRNNGenerator(GeneratorBase):
         for idx, (t, y_logsig_) in enumerate(zip(time_t, y_logsig)):
             h = self.rnn(torch.cat([last_h, y_logsig_],-1))
             if t >= u_logsigrnn[0]:
+                #h=self.rnn(torch.cat([last_h, y_logsig_u[0]],-1))
+                #last_u=u_logsigrnn[0].copy
                 del u_logsigrnn[0]
                 last_h = h
             x[:,idx,:] = self.linear(h)
 
         assert x.shape[1] == n_lags
         return x
+        
+ #input_dim, output_dim, n_lags, augmentations, depth, hidden_dim, n_layers, len_noise=1000, len_interval_u=50, init_fixed: bool = True)
+ 
+def compute_multilevel_logsignature_1(x: torch.Tensor, n_segments, depth):
+    """ Computes the multilevel logsignature for an incoming discrete time-series. """
+    nT = x.size(1)
 
+    logsig_channels = signatory.logsignature_channels(in_channels=x.shape[-1], depth=depth)
+
+    t_vec = np.linspace(1, nT, n_segments)
+    t_vec = [int(round(x)) for x in t_vec]
+
+    multi_level_log_sig = torch.zeros(x.size(0), n_segments - 1, logsig_channels)
+
+    for i in range(1, n_segments):
+        x_t = x[:, t_vec[i - 1] - 1:t_vec[i], :]
+        multi_level_log_sig[:, i - 1] = signatory.logsignature(x_t, depth=depth)
+    return multi_level_log_sig
+
+class LogSigRNNGenerator_1(GeneratorBase):
+    def __init__(self, input_dim, output_dim, n_lags, augmentations, depth, hidden_dim, n_layers, len_noise=1001, scaling_factor=1,len_interval_u=50, init_fixed: bool = True):
+        super(LogSigRNNGenerator, self).__init__(input_dim, output_dim)
+        input_dim_rnn = get_number_of_channels_after_augmentations(input_dim, augmentations)
+
+        logsig_channels = signatory.logsignature_channels(in_channels=input_dim_rnn, depth=depth)
+
+        self.n_lags = n_lags
+        self.depth = depth
+        self.augmentations = augmentations
+        self.input_dim = input_dim
+        self.len_noise = len_noise
+        self.scaling_factor = scaling_factor
+        self.rnn = torch.nn.LSTM(input_size=logsig_channels, hidden_size=hidden_dim,
+                                 num_layers=n_layers, batch_first=True, )
+        self.linear = torch.nn.Linear(hidden_dim, output_dim)
+        
+        init_weights_=lambda x:init_weights(x,scale)
+        self.rnn.apply(init_weights_)
+        self.linear.apply(init_weights_)
+
+    def forward(self, batch_size: int, n_lags: int, device: str):
+        z = (self.scaling_factor*torch.randn(batch_size, self.len_noise, self.input_dim).to(device)).cumsum(1)
+        y = apply_augmentations(z, self.augmentations)
+
+        y_logsig = compute_multilevel_logsignature_1(y, self.n_lags+1, self.depth).to(device)
+        h1, _ = self.rnn(y_logsig)
+        x = self.linear(h1)
+
+        assert x.shape[1] == self.n_lags
+
+        return x

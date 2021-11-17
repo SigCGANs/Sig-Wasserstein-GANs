@@ -6,7 +6,7 @@
     {"name":  "AddTime"}
   ],
   "depth": 4,
-  "input_dim": 5,
+  "input_dim": 1,
   "len_noise": 1000,
   "len_interval_u": 100,
   "init_fixed": true

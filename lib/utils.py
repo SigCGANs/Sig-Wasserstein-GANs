@@ -34,7 +34,7 @@ def save_obj(obj: object, filepath: str):
         saver = torch.save
     else:
         raise NotImplementedError()
-    with open(filepath, 'wb') as f:
+    with open(filepath, 'wb') as f: 
         saver(obj, f)
     return 0
 
@@ -46,7 +46,7 @@ def load_obj(filepath):
     elif filepath.endswith('pt'):
         loader = torch.load
     elif filepath.endswith('json'):
-        import json
+        import json 
         loader = json.load
     else:
         raise NotImplementedError()
@@ -55,10 +55,10 @@ def load_obj(filepath):
 
 
 
-def init_weights(m):
-    if isinstance(m, nn.Linear):
-        nn.init.xavier_uniform_(m.weight.data, gain=nn.init.calculate_gain('relu'))
+def init_weights(m,scale):
+    if isinstance(m, nn.Linear): 
+        nn.init.xavier_uniform_(m.weight.data, gain=scale*nn.init.calculate_gain('relu'))
         try:
-            nn.init.zeros_(m.bias)#m.bias.zero_()#, gain=nn.init.calculate_gain('relu'))
+            nn.init.zeros_(m.bias)
         except:
             pass

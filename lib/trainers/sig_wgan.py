@@ -13,10 +13,14 @@ from torch import optim
 
 
 class SigWGANTrainer(BaseTrainer):
-    def __init__(self, G, lr, depth, x_real_rolled, augmentations, normalise_sig: bool = True, mask_rate=0.01, **kwargs):
+    def __init__(self, G, lr, depth, x_real_rolled, augmentations, normalise_sig: bool = True,use_scheduler: bool =True, **kwargs):
         super(SigWGANTrainer, self).__init__(G=G, G_optimizer=optim.Adam(G.parameters(), lr=lr), **kwargs)
-        self.sig_w1_metric = SigW1Metric(depth=depth, x_real=x_real_rolled, augmentations=augmentations, mask_rate=mask_rate, normalise=normalise_sig)
-        self.scheduler = optim.lr_scheduler.StepLR(optimizer=self.G_optimizer, gamma=0.95, step_size=128)
+        self.sig_w1_metric = SigW1Metric(depth=depth, x_real=x_real_rolled, augmentations=augmentations, normalise=normalise_sig)
+        self.use_scheduler=use_scheduler
+        if self.use_scheduler:
+          self.scheduler = optim.lr_scheduler.StepLR(optimizer=self.G_optimizer, gamma=0.95, step_size=128)
+        print('self.use_scheduler',self.use_scheduler)
+        print("self.save_best",self.save_best)
 
     def fit(self, device):
         self.G.to(device)
@@ -31,14 +35,12 @@ class SigWGANTrainer(BaseTrainer):
             best_loss = loss.item() if j==0 else best_loss
             if (j+1)%100 == 0: print("sig-w1 loss: {:1.2e}".format(loss.item()))
             self.G_optimizer.step()
-            self.scheduler.step()
+            if self.use_scheduler:
+                self.scheduler.step()
             self.losses_history['sig_w1_loss'].append(loss.item())
             self.evaluate(x_fake)
-            #if loss < best_loss:
-            #    best_G = deepcopy(self.G.state_dict())
-            #    best_loss = loss
-        
-        self.G.load_state_dict(self.best_G) # we retrieve the best generator
+        if self.save_best:
+          self.G.load_state_dict(self.best_G) # we retrieve the best generator
 
 
 
@@ -119,25 +121,18 @@ def compute_expected_signature(x_path, depth: int, augmentations: Tuple, normali
             count = count + dim**(i+1)
     return expected_signature
 
-
 def rmse(x, y):
     return (x - y).pow(2).sum().sqrt()
 
-def masked_rmse(x, y, mask_rate, device):
-    mask = torch.FloatTensor(x.shape[0]).to(device).uniform_() > mask_rate
-    mask = mask.int()
-    return ((x - y).pow(2) * mask).mean().sqrt()
-
 
 class SigW1Metric:
-    def __init__(self, depth: int, x_real: torch.Tensor, mask_rate:float, augmentations: Optional[Tuple] = (), normalise: bool = True):
+    def __init__(self, depth: int, x_real: torch.Tensor, augmentations: Optional[Tuple] = (), normalise: bool = True):
         assert len(x_real.shape) == 3, \
             'Path needs to be 3-dimensional. Received %s dimension(s).' % (len(x_real.shape),)
 
         self.augmentations = augmentations
         self.depth = depth
         self.n_lags = x_real.shape[1]
-        self.mask_rate = mask_rate
 
         self.normalise = normalise
         self.expected_signature_mu = compute_expected_signature(x_real, depth, augmentations, normalise)
@@ -147,13 +142,7 @@ class SigW1Metric:
         """ Computes the SigW1 metric."""
         device = x_path_nu.device
         batch_size = x_path_nu.shape[0]
-        #expected_signature_nu1 = compute_expected_signature(x_path_nu[:batch_size//2], self.depth, self.augmentations)
-        #expected_signature_nu2 = compute_expected_signature(x_path_nu[batch_size//2:], self.depth, self.augmentations)
-        #y = self.expected_signature_mu.to(device)
-        #loss = (expected_signature_nu1-y)*(expected_signature_nu2-y)
-        #loss = loss.sum()
         expected_signature_nu = compute_expected_signature(x_path_nu, self.depth, self.augmentations, self.normalise)
         loss = rmse(self.expected_signature_mu.to(device), expected_signature_nu)
-        #loss = masked_rmse(self.expected_signature_mu.to(
-        #    device), expected_signature_nu, self.mask_rate, device)
+
         return loss
