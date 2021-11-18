@@ -300,5 +300,5 @@ if __name__ == '__main__':
     else:
         device = 'cpu'
     # Test run
-    benchmark_sigwgan(datasets=('STOCKS', ), generators=('LogSigRNN', 'LSTM',), n_seeds=1, device=device)
-    benchmark_wgan(datasets=('STOCKS',), generators=('LogSigRNN', 'LSTM'), n_seeds=1, device=device)
+    benchmark_sigwgan(datasets=('STOCKS', 'GBM'), generators=('LogSigRNN', 'LSTM',), n_seeds=1, device=device)
+    benchmark_wgan(datasets=('STOCKS', 'GBM'), generators=('LogSigRNN', 'LSTM'), n_seeds=1, device=device)
