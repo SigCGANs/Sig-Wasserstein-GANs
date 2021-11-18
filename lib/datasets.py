@@ -127,7 +127,7 @@ def get_stocks_dataset(
 
     x = np.concatenate([logrtns, vols[1:]], axis=1)
     x = torch.from_numpy(x).float().unsqueeze(0)
-    return x
+    return x[..., :1] # we only learn the logreturn
 
 
 def download_man_ahl_dataset(datadir):
@@ -241,6 +241,7 @@ def get_dataset(dataset: str, data_config: dict, n_lags: int, datadir=DATA_DIR):
             print('Downloading Oxford MAN AHL realised library.')
             download_man_ahl_dataset(datadir)
         x_real = get_stocks_dataset(datadir=datadir, **data_config)
+        x_real = rolling_window(x_real, n_lags)
     elif dataset == 'ECG':
         if not pt.exists(
                 pt.join(DATA_DIR, 'mit-bih-arrhythmia-database-1.0.0')
@@ -290,42 +291,10 @@ def train_test_split(
 
 
 
-
-
-
 # Functions to simulate fbm and rough volatility model
 def ComputeY(Y_last, dt, dB, step):
     ans = Y_last + (-np.pi * Y_last + np.sin(np.pi * step * dt)) * dt + Y_last * dB + 0.5 * Y_last * (dB * dB - dt)
     return ans
-
-
-def get_fbm(number_of_timstep, T, H=0.75):
-    dT = T / (number_of_timstep - 1)
-    fBM = np.zeros([number_of_timstep, 2], dtype=float)
-    output = [0]
-    temp_fbm = fbm(n=number_of_timstep - 1, hurst=H,
-                   length=T, method='daviesharte')
-    for i in range(1, number_of_timstep):
-        fBM[i, 0] = dT + fBM[i - 1, 0]
-        dfB = temp_fbm[i] - temp_fbm[i - 1]
-        fBM[i, 1] = temp_fbm[i]
-        output.append(ComputeY(output[-1], dT, dfB, i))
-    return {'output': np.array(output), 'BM': fBM}
-
-
-def get_sde_paths(hurst=0.25, size=2200, n_lags=100, maturity=1):
-    assert hurst<0.5, "hurst parameter should be < 0.5"
-    BM = np.zeros([n_lags, 2], dtype=float)
-    # BM_paths - number_of_independent_simulations of one dimensional path
-    BM_paths = np.zeros([size,n_lags], dtype=float)
-    output = np.zeros([size,n_lags], dtype=float)
-
-    for j in tqdm(range(0, size, 1), total=size):
-        result1 = get_fbm(n_lags, maturity, hurst)
-        output[j] = result1['output']
-        BM = result1['BM']
-        BM_paths[j] = np.transpose(BM[:, 1])
-    return BM_paths, output
 
 
 def get_rBergomi_paths(hurst=0.25, size=2200, n_lags=100, maturity=1, xi=0.5, eta=0.5):

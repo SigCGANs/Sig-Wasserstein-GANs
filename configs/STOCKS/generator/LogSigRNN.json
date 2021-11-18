@@ -1,9 +1,13 @@
 {
   "generator_type": "LogSigRNN",
-  "hidden_dim": 64,
+  "hidden_dim": 50,
   "n_layers": 2,
-  "augmentations": ["Basepoint", "AddTime"],
+  "augmentations": [
+    {"name":  "AddTime"}
+  ],
   "depth": 3,
-  "increment": false,
-  "scale_output": 1.0
+  "input_dim": 5,
+  "len_noise": 1000,
+  "len_interval_u": 50,
+  "init_fixed": false
 }

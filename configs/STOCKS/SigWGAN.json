@@ -1,11 +1,12 @@
 {
   "batch_size": 2000,
-  "n_gradient_steps": 2024,
+  "n_gradient_steps": 2500,
   "depth": 4,
-  "lr": 3e-3,
-    "augmentations": [
-    {"name":  "Basepoint"},
-    {"name":  "Scale", "scale": 0.5},
-    {"name":  "AddTime"}
+  "lr": 1e-3,
+  "augmentations": [
+    {"name":  "Scale", "scale":  2, "dim": 0},
+    {"name":  "AddTime"},
+    {"name":  "LeadLag"},
+    {"name":  "VisiTrans", "type": "I"}
   ]
 }

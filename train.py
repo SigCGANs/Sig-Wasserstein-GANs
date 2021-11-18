@@ -107,6 +107,8 @@ def main(
 
     # Store relevant training results
     save_obj(to_numpy(x_real), pt.join(experiment_dir, 'x_real.pkl'))
+    save_obj(to_numpy(x_real_test), pt.join(experiment_dir, 'x_real_test.pkl'))
+    save_obj(to_numpy(x_real_train), pt.join(experiment_dir, 'x_real_train.pkl'))
     save_obj(trainer.losses_history, pt.join(experiment_dir, 'losses_history.pkl'))  # dev of losses / metrics
     save_obj(trainer.G.state_dict(), pt.join(experiment_dir, 'generator_state_dict.pt'))
     save_obj(generator_config, pt.join(experiment_dir, 'generator_config.pkl'))
@@ -146,7 +148,7 @@ def main(
     plt.savefig(pt.join(experiment_dir, 'x_real.png'))
     plt.close()
 
-    evaluate_generator(experiment_dir, batch_size=1024)
+    evaluate_generator(experiment_dir, batch_size=5000,)
 
     if gan_algo == 'WGAN':
         save_obj(trainer.D.state_dict(), pt.join(experiment_dir, 'discriminator_state_dict.pt'))
@@ -298,5 +300,5 @@ if __name__ == '__main__':
     else:
         device = 'cpu'
     # Test run
-    benchmark_sigwgan(datasets=('GBM',), generators=('LogSigRNN', 'LSTM'), n_seeds=10, device=device)
-    benchmark_wgan(datasets=('GBM',), generators=('LogSigRNN', 'LSTM'), n_seeds=10, device=device)
+    benchmark_sigwgan(datasets=('STOCKS', ), generators=('LogSigRNN', 'LSTM',), n_seeds=1, device=device)
+    benchmark_wgan(datasets=('STOCKS',), generators=('LogSigRNN', 'LSTM'), n_seeds=1, device=device)

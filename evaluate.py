@@ -50,7 +50,7 @@ def evaluate_generator(experiment_dir, batch_size=1000, device='cpu', foo = lamb
     generator.load_state_dict(generator_state_dict)
 
     data_config = load_obj(pt.join(experiment_dir, 'data_config.pkl'))
-    x_real = torch.from_numpy(load_obj(pt.join(experiment_dir, 'x_real.pkl'))).detach()
+    x_real = torch.from_numpy(load_obj(pt.join(experiment_dir, 'x_real_test.pkl'))).detach()
 
     n_lags = data_config['n_lags']
 
