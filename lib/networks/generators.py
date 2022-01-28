@@ -91,8 +91,8 @@ def compute_multilevel_logsignature(brownian_path: torch.Tensor, time_brownian: 
 
     u_logsigrnn = []
     last_u = -1
-    for ind_t, t in enumerate(time_t):
-        u = time_u[time_u <= t].max()
+    for ind_t, t in enumerate(time_t[1:]):
+        u = time_u[time_u < t].max()
         ind_low = torch.nonzero((time_brownian<=u).float(), as_tuple=False).max() 
         if u != last_u:
             u_logsigrnn.append(u)
@@ -100,10 +100,28 @@ def compute_multilevel_logsignature(brownian_path: torch.Tensor, time_brownian: 
 
         ind_max = torch.nonzero((time_brownian<=t).float(), as_tuple=False).max() 
         interval = brownian_path[:, ind_low:ind_max+1, :]
-        #if t == 0:
         multi_level_log_sig.append(signatory.logsignature(interval, depth=depth, basepoint=True))
-        #else:
-        #    multi_level_log_sig[:,ind_t] = signatory.logsignature(interval, depth=depth)
+    multi_level_log_sig = [torch.zeros_like(multi_level_log_sig[0])] + multi_level_log_sig
+
+    #logsig_channels = signatory.logsignature_channels(in_channels = brownian_path.shape[-1], depth=depth)
+
+    #multi_level_log_sig = [] #torch.zeros(brownian_path.shape[0], len(time_t), logsig_channels)
+
+    #u_logsigrnn = []
+    #last_u = -1
+    #for ind_t, t in enumerate(time_t):
+    #    u = time_u[time_u <= t].max()
+    #    ind_low = torch.nonzero((time_brownian<=u).float(), as_tuple=False).max() 
+    #    if u != last_u:
+    #        u_logsigrnn.append(u)
+    #        last_u = u
+
+    #    ind_max = torch.nonzero((time_brownian<=t).float(), as_tuple=False).max() 
+    #    interval = brownian_path[:, ind_low:ind_max+1, :]
+    #    #if t == 0:
+    #    multi_level_log_sig.append(signatory.logsignature(interval, depth=depth, basepoint=True))
+    #    #else:
+    #    #    multi_level_log_sig[:,ind_t] = signatory.logsignature(interval, depth=depth)
 
     return multi_level_log_sig, u_logsigrnn
 
