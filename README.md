@@ -2,9 +2,9 @@
 
 This repository is the official implementation of [Sig-Wasserstein GANs for Time Series Generation]
 
-Authors:
+Authors: Hao Ni, Lukasz Szpruch, Marc Sabate-Vidales, Baoren Xiao, Magnus Wiese, Shujian Liao
 
-Paper Link:
+Paper Link: [Sig-Wasserstein GANs for Time Series Generation](https://arxiv.org/abs/2111.01207)
 
 ## Requirements
 
